@@ -1,0 +1,78 @@
+# Сборка Akii для iPhone на облачном Mac (GitHub Actions).
+# Запуск: вкладка Actions → «Сборка для iOS» → Run workflow.
+# Результат: файл Akii-unsigned.ipa (раздел Artifacts внизу страницы запуска).
+# Установка на iPhone — через Sideloadly с вашим Apple ID (см. README).
+name: Сборка для iOS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-14
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Инструменты для сборки
+        run: |
+          brew install autoconf automake libtool pkg-config || true
+          python -m pip install --upgrade pip
+          pip install kivy-ios "cython<3.1" setuptools wheel
+
+      - name: Кеш собранных библиотек kivy-ios
+        uses: actions/cache@v4
+        with:
+          path: ~/kivy-ios-build
+          key: kivy-ios-${{ runner.os }}-${{ runner.arch }}-v1
+
+      - name: Сборка Python и Kivy под iOS (первый раз ~40 минут)
+        run: |
+          mkdir -p ~/kivy-ios-build && cd ~/kivy-ios-build
+          toolchain build python3 kivy
+
+      - name: Папка приложения с библиотеками на чистом Python
+        run: |
+          mkdir -p ~/akii_app
+          rsync -a --exclude '.git' --exclude '.github' --exclude 'server' --exclude 'tests' \
+                   --exclude 'tools' --exclude 'data/*.db' --exclude '*.md' --exclude 'buildozer.spec' ./ ~/akii_app/
+          # materialyoucolor без C++-расширения (оно не нужно приложению)
+          MYCP_PURE_PYTHON=1 pip install --no-binary materialyoucolor --no-deps --target ~/akii_app materialyoucolor
+          pip install --no-deps --target ~/akii_app "kivymd==2.0.0" "asynckivy>=0.6,<0.7" "asyncgui>=0.6,<0.7" filetype plyer
+          find ~/akii_app -name "*.so" -delete
+          ls ~/akii_app
+
+      - name: Проект Xcode
+        run: |
+          cd ~/kivy-ios-build
+          rm -rf akii-ios
+          toolchain create Akii ~/akii_app
+          toolchain icon akii-ios ~/akii_app/assets/icons/icon.png || echo "иконка не обновлена"
+          ls akii-ios
+
+      - name: Сборка приложения без подписи
+        run: |
+          cd ~/kivy-ios-build/akii-ios
+          PROJ=$(ls -d *.xcodeproj | head -1)
+          SCHEME=$(basename "$PROJ" .xcodeproj)
+          xcodebuild -project "$PROJ" -scheme "$SCHEME" -configuration Release -sdk iphoneos \
+            -derivedDataPath build ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+
+      - name: Упаковка в .ipa
+        run: |
+          APP=$(find ~/kivy-ios-build/akii-ios/build -path "*iphoneos*" -name "*.app" -maxdepth 6 | head -1)
+          echo "Собрано: $APP"
+          mkdir -p ipa/Payload && cp -R "$APP" ipa/Payload/
+          cd ipa && zip -qr ../Akii-unsigned.ipa Payload
+          ls -la ../Akii-unsigned.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Akii-unsigned-ipa
+          path: Akii-unsigned.ipa
+          retention-days: 30
