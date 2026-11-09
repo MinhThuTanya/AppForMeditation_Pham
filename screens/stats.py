@@ -10,7 +10,7 @@ from kivy.uix.label import Label
 from kivymd.uix.screen import MDScreen
 
 from logic import analytics, database, journal
-from screens.widgets import BLUE2, Body, MONTHS, MUTED, NAVY, WD_SHORT
+from screens.widgets import BLUE2, Body, MONTHS, MUTED, NAVY, WD_SHORT, bind_bars
 
 Builder.load_string('''
 #:import W screens.widgets
@@ -89,6 +89,20 @@ Builder.load_string('''
                         row_force_default: True
                 Card:
                     Label:
+                        text: app.t("week_mood", app.lang)
+                        font_name: W.SANS_BOLD
+                        font_size: "14sp"
+                        color: W.NAVY
+                        size_hint_y: None
+                        height: dp(22)
+                        text_size: self.size
+                        halign: "left"
+                    Bars:
+                        id: bars
+                        size_hint_y: None
+                        height: dp(110)
+                Card:
+                    Label:
                         text: app.t("stress_last", app.lang)
                         font_name: W.SANS_BOLD
                         font_size: "14sp"
@@ -143,6 +157,9 @@ class StatsScreen(MDScreen):
     stress_text = StringProperty("")
 
     def on_pre_enter(self, *_):
+        if not getattr(self, "_bars_bound", False):
+            bind_bars(self.ids.bars)
+            self._bars_bound = True
         self.refresh()
 
     def refresh(self):
@@ -164,6 +181,9 @@ class StatsScreen(MDScreen):
             done = d in days
             grid.add_widget(Label(text=("• " if done else "") + str(d), font_size="12sp",
                                   color=BLUE2 if done else NAVY, bold=done))
+        week = analytics.week_moods()
+        self.ids.bars.values = [v for _, v in week]
+        self.ids.bars.labels = [WD_SHORT[lang][d.weekday()] for d, _ in week]
         last = database.get_last_stress()
         if last:
             self.stress_text = app.t("stress_last_text").format(

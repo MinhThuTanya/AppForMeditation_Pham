@@ -217,6 +217,8 @@
  "reminders": "Reminder",
  "reminder_text": "Every day at the chosen time",
  "reminder_note": "On a computer the reminder appears while the app is open.",
+ "snooze_15": "In 15 min",
+ "snoozed": "I will remind you in 15 minutes",
  "reminder_message": "Time for your practice",
  "off": "Off",
  "account": "Account",

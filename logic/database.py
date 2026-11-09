@@ -200,3 +200,23 @@ def get_last_stress(path=DB_PATH):
         return conn.execute(
             "SELECT score, category, date FROM stress_tests"
             " ORDER BY date DESC, id DESC LIMIT 1").fetchone()
+
+
+# Поля, добавленные после первой версии базы (актуализация ТЗ, октябрь 2026)
+NEW_COLUMNS = {"sessions": [("mood_before", "INTEGER"), ("mood_after", "INTEGER")],
+               "settings": [("language", "TEXT")]}
+
+
+def migrate(path=DB_PATH):
+    """Обновляет базу, созданную первой версией приложения: новые таблицы
+    создаёт init_db() (CREATE TABLE IF NOT EXISTS), а новые поля
+    в старых таблицах добавляются командой ALTER TABLE."""
+    added = []
+    with get_connection(path) as conn:
+        for table, columns in NEW_COLUMNS.items():
+            have = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
+            for name, kind in columns:
+                if name not in have:
+                    conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {kind}")
+                    added.append(f"{table}.{name}")
+    return added

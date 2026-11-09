@@ -82,6 +82,27 @@ class LogicTest(unittest.TestCase):
         self.assertTrue(43 <= len(v) <= 128)
         self.assertNotIn("=", c)
 
+    def test_migrate_old_database(self):
+        """База первой версии (без новых полей) обновляется без потери данных."""
+        fd, old = tempfile.mkstemp(suffix=".db")
+        os.close(fd)
+        with sqlite3.connect(old) as c:
+            c.execute("CREATE TABLE sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, mood_id INTEGER,"
+                      " duration INTEGER NOT NULL, date TEXT NOT NULL, meditation_type TEXT,"
+                      " voice TEXT, sound TEXT)")
+            c.execute("CREATE TABLE settings (id INTEGER PRIMARY KEY CHECK (id = 1),"
+                      " achievement_id INTEGER, reminder_time TEXT DEFAULT '09:00',"
+                      " reminder_enabled INTEGER DEFAULT 0, default_voice TEXT DEFAULT 'female',"
+                      " default_sound TEXT DEFAULT 'rain', default_duration INTEGER DEFAULT 10,"
+                      " avatar_state TEXT DEFAULT 'calm')")
+            c.execute("INSERT INTO sessions (duration, date) VALUES (10, '2026-10-01')")
+        database.init_db(old)
+        self.assertEqual(sorted(database.migrate(old)),
+                         ["sessions.mood_after", "sessions.mood_before", "settings.language"])
+        self.assertEqual(database.migrate(old), [])
+        self.assertEqual(database.get_total_time(old), 10)
+        os.remove(old)
+
     def test_achievements(self):
         self._session_on(date.today())
         self.assertIn("Первая медитация", analytics.check_achievements(path=self.db))

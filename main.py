@@ -45,7 +45,7 @@ from kivy.uix.screenmanager import FadeTransition, SlideTransition  # noqa: E402
 
 from logic import billing, i18n  # noqa: E402
 from logic.account import get_account  # noqa: E402
-from logic.database import init_db  # noqa: E402
+from logic.database import init_db, migrate  # noqa: E402
 from screens.widgets import BG  # noqa: E402
 
 
@@ -65,6 +65,7 @@ class AkiiApp(MDApp):
         self.theme_cls.primary_palette = "Royalblue"
         Window.clearcolor = BG
         init_db()
+        migrate()
         i18n.init_language()
         self.lang = i18n._lang
         self.premium = billing.is_premium()
@@ -165,6 +166,7 @@ class AkiiApp(MDApp):
     def on_start(self):
         Clock.schedule_once(lambda dt: self.sm.get_screen("splash").start(), 0)
         self._reminded = None
+        self._snooze_until = None
         Clock.schedule_interval(self.check_reminder, 30)
 
     def check_reminder(self, *_):
@@ -174,17 +176,32 @@ class AkiiApp(MDApp):
         from logic.database import get_settings
         s = get_settings()
         now = datetime.now()
-        if not s["reminder_enabled"] or now.strftime("%H:%M") != s["reminder_time"]:
-            return
-        if self._reminded == now.date():
-            return
+        snoozed = self._snooze_until and now >= self._snooze_until
+        if not snoozed:
+            if not s["reminder_enabled"] or now.strftime("%H:%M") != s["reminder_time"]:
+                return
+            if self._reminded == now.date():
+                return
         self._reminded = now.date()
+        self._snooze_until = None
         try:
             from plyer import notification
             notification.notify(title="Akii", message=self.t("reminder_message"),
                                 app_name="Akii", timeout=10)
         except Exception:
-            self.toast(self.t("reminder_message"))
+            pass
+        from screens.widgets import ask
+        ask(self.t("reminder_message"), [("start", self.t("start")), ("snooze", self.t("snooze_15"))],
+            self._on_reminder_choice)
+
+    def _on_reminder_choice(self, choice):
+        """F.02.02: напоминание можно отложить на 15 минут."""
+        from datetime import datetime, timedelta
+        if choice == "snooze":
+            self._snooze_until = datetime.now() + timedelta(minutes=15)
+            self.toast(self.t("snoozed"))
+        elif choice == "start":
+            self.tab("library")
 
     def on_pause(self):
         return True

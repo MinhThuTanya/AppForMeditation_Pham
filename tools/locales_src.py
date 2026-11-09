@@ -142,6 +142,7 @@ L = [
 ("settings_title", "Настройки", "Settings"), ("language", "Язык", "Language"),
 ("reminders", "Напоминание", "Reminder"), ("reminder_text", "Ежедневно в выбранное время", "Every day at the chosen time"),
 ("reminder_note", "На компьютере напоминание приходит, пока приложение открыто.", "On a computer the reminder appears while the app is open."),
+("snooze_15", "Через 15 мин", "In 15 min"), ("snoozed", "Напомню через 15 минут", "I will remind you in 15 minutes"),
 ("reminder_message", "Время для вашей практики", "Time for your practice"), ("off", "Выкл", "Off"),
 ("account", "Аккаунт", "Account"),
 ("no_account", "Вы не вошли. Данные хранятся только на этом устройстве.", "Not signed in. Your data stays on this device."),
