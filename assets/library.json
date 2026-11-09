@@ -1,0 +1,35 @@
+{
+  "durations": [3, 5, 10, 15],
+  "voices": ["female", "male"],
+  "sounds": [
+    {"id": "rain", "title": {"ru": "Дождь", "en": "Rain"}, "file": "assets/audio/Rain. — LO-FI (www.lightaudio.ru).mp3"},
+    {"id": "forest", "title": {"ru": "Лес", "en": "Forest"}, "file": "assets/audio/forest.mp3"},
+    {"id": "silence", "title": {"ru": "Тишина", "en": "Silence"}, "file": null}
+  ],
+  "items": [
+    {"id": "anxiety", "type": "meditation", "premium": false, "icon": "leaf",
+     "title": {"ru": "От тревоги", "en": "Ease anxiety"},
+     "subtitle": {"ru": "Мягкое дыхание и отпускание напряжения", "en": "Soft breathing to let tension go"},
+     "file": "assets/audio/42933__kerri__catalpa_sample_raw meditation music.mp3"},
+    {"id": "focus", "type": "meditation", "premium": false, "icon": "target",
+     "title": {"ru": "Концентрация", "en": "Focus"},
+     "subtitle": {"ru": "Возвращаем внимание к дыханию", "en": "Bring attention back to the breath"},
+     "file": "assets/audio/42933__kerri__catalpa_sample_raw meditation music.mp3"},
+    {"id": "evening_calm", "type": "meditation", "premium": false, "icon": "weather-sunset",
+     "title": {"ru": "Спокойный вечер", "en": "Calm evening"},
+     "subtitle": {"ru": "Подвести итог дня без оценок", "en": "Close the day without judging"},
+     "file": "assets/audio/42933__kerri__catalpa_sample_raw meditation music.mp3"},
+    {"id": "sleep_harbor", "type": "sleep", "premium": false, "icon": "weather-night",
+     "title": {"ru": "Тихая гавань", "en": "Quiet harbour"},
+     "subtitle": {"ru": "История для сна под шум дождя", "en": "A sleep story with rain"},
+     "file": "assets/audio/Rain. — LO-FI (www.lightaudio.ru).mp3"},
+    {"id": "chill_time", "type": "music", "premium": true, "icon": "music-note",
+     "title": {"ru": "Chill time", "en": "Chill time"},
+     "subtitle": {"ru": "Эксклюзивная музыка для релакса", "en": "Exclusive relaxing music"},
+     "file": "assets/audio/Chill_time.mp3"},
+    {"id": "body_scan", "type": "course", "premium": true, "icon": "human-handsup",
+     "title": {"ru": "Курс «7 дней спокойствия»", "en": "Course: 7 calm days"},
+     "subtitle": {"ru": "Сканирование тела и дыхание", "en": "Body scan and breathing"},
+     "file": "assets/audio/Chill_time.mp3"}
+  ]
+}

@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Kivy / Buildozer
+bin/
+.buildozer/
+*.apk
+*.aab
+
+# База данных
+data/*.db
+data/*.sqlite
+
+# Аудио и временные файлы
+*.mp3
+*.wav
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+# Данные приложения и сервера
+data/export/
+data/dreams/
+akii_server.db
+
+# Настройки Kivy, создаются при запуске
+akii.ini
