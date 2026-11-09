@@ -11,26 +11,33 @@ from kivy.uix.label import Label
 from kivymd.uix.screen import MDScreen
 
 from logic import journal
-from screens.widgets import (Body, Card, Chip, MONTHS, MOOD_COLORS, MOOD_KEYS,
-                             MOODS, NAVY, WD_SHORT, long_date)
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.image import Image
+
+from screens.widgets import (ROUND, Body, Card, Chip, FXButton, MONTHS, MOOD_COLORS, MOOD_KEYS,
+                             MOODS, NAVY, WD_SHORT, long_date, mood_icon)
 
 Builder.load_string('''
 #:import W screens.widgets
 
 <DayCell>:
-    font_name: W.SANS_MED
-    font_size: "13sp"
-    color: W.NAVY if self.fill[3] == 0 else W.WHITE
+    font_name: W.ROUND
+    font_size: "9sp" if self.icon else "13sp"
+    color: W.NAVY
+    text_size: self.size if self.icon else (None, None)
+    halign: "right"
+    valign: "bottom"
     canvas.before:
         Color:
-            rgba: self.fill
-        Ellipse:
-            size: min(self.width, self.height) - dp(4), min(self.width, self.height) - dp(4)
-            pos: self.center_x - (min(self.width, self.height) - dp(4)) / 2, self.center_y - (min(self.width, self.height) - dp(4)) / 2
+            rgba: (1, 1, 1, 1) if self.icon else (0, 0, 0, 0)
+        Rectangle:
+            source: self.icon or None
+            size: min(self.width, self.height) - dp(6), min(self.width, self.height) - dp(6)
+            pos: self.center_x - (min(self.width, self.height) - dp(6)) / 2, self.center_y - (min(self.width, self.height) - dp(6)) / 2
         Color:
             rgba: W.NAVY if self.today else (0, 0, 0, 0)
         Line:
-            circle: self.center_x, self.center_y, (min(self.width, self.height) - dp(4)) / 2
+            circle: self.center_x, self.center_y, (min(self.width, self.height) - dp(2)) / 2
             width: 1.4
 
 <JournalScreen>:
@@ -72,11 +79,12 @@ Builder.load_string('''
                     height: self.minimum_height
                     row_default_height: dp(40)
                     row_force_default: True
-            BoxLayout:
+            GridLayout:
                 id: legend
                 size_hint_y: None
-                height: dp(20)
-                spacing: dp(6)
+                height: dp(44)
+                spacing: dp(4)
+                cols: 3
             BoxLayout:
                 id: entries
                 orientation: "vertical"
@@ -188,12 +196,13 @@ Builder.load_string('''
 PROMPTS = ["prompt_1", "prompt_2", "prompt_3", "prompt_4", "prompt_5"]
 
 
-class DayCell(ButtonBehavior, Label):
-    fill = ColorProperty((0, 0, 0, 0))
+class DayCell(FXButton, Label):
+    """День календаря: смайлик настроения вместо цветного круга."""
+    icon = StringProperty("")
     today = BooleanProperty(False)
 
 
-class EntryCard(ButtonBehavior, Card):
+class EntryCard(FXButton, Card):
     pass
 
 
@@ -234,18 +243,26 @@ class JournalScreen(MDScreen):
             cell = DayCell(text=str(day))
             cell.today = d == today
             if iso in marks:
-                cell.fill = MOOD_COLORS.get(marks[iso]) or (0.75, 0.8, 0.9, 1)
+                if marks[iso]:
+                    cell.icon = mood_icon(marks[iso])
+                else:                      # запись без отметки настроения
+                    cell.color = (0.24, 0.43, 0.84, 1)
+                    cell.bold = True
             if d <= today:
                 cell.bind(on_release=lambda w, x=iso: app.go("entry", day=x))
             else:
-                cell.color = (0.42, 0.45, 0.58, 0.4)
+                cell.color = cell.disabled_color = (0.42, 0.45, 0.58, 0.4)
+                cell.disabled = True
             grid.add_widget(cell)
         # легенда
         leg = self.ids.legend
         leg.clear_widgets()
-        for m in MOODS[:4]:
-            leg.add_widget(Label(text=f"[color={_hex(MOOD_COLORS[m])}]•[/color] {app.t(MOOD_KEYS[m])}",
-                                 markup=True, font_size="10sp", color=(0.42, 0.45, 0.58, 1)))
+        for m in MOODS:
+            item = BoxLayout(spacing=dp(3))
+            item.add_widget(Image(source=mood_icon(m), size_hint_x=None, width=dp(16), fit_mode="contain"))
+            item.add_widget(Label(text=app.t(MOOD_KEYS[m]), font_size="10sp", color=(0.42, 0.45, 0.58, 1),
+                                  font_name=ROUND, halign="left", text_size=(None, None)))
+            leg.add_widget(item)
         # последние записи
         box = self.ids.entries
         box.clear_widgets()
@@ -255,9 +272,12 @@ class JournalScreen(MDScreen):
         for entry_date, title, text, mood in rows:
             card = EntryCard()
             head = long_date(date.fromisoformat(entry_date), lang)
+            row = BoxLayout(size_hint_y=None, height=dp(22), spacing=dp(6))
             if mood:
-                head += f"   [color={_hex(MOOD_COLORS[mood])}]• {app.t(MOOD_KEYS[mood])}[/color]"
-            card.add_widget(Body(text=head, markup=True, font_size="11sp"))
+                row.add_widget(Image(source=mood_icon(mood), size_hint_x=None, width=dp(22), fit_mode="contain"))
+                head += f"  ·  {app.t(MOOD_KEYS[mood])}"
+            row.add_widget(Body(text=head, font_size="11sp", size_hint_y=None, height=dp(22), valign="middle"))
+            card.add_widget(row)
             head_lbl = Label(text=title or app.t("no_title"), font_name="assets/fonts/Inter-Bold.otf",
                              font_size="15sp", color=NAVY, size_hint_y=None, height=dp(22),
                              halign="left", shorten=True)

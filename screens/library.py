@@ -6,7 +6,7 @@ from kivy.uix.behaviors import ButtonBehavior
 from kivymd.uix.screen import MDScreen
 
 from logic.audio_player import load_library
-from screens.widgets import Card, Chip
+from screens.widgets import Card, Chip, FXButton
 
 Builder.load_string('''
 #:import W screens.widgets
@@ -93,7 +93,7 @@ FILTERS = [("all", "filter_all"), ("meditation", "filter_meditation"), ("sleep",
            ("music", "filter_music"), ("course", "filter_course")]
 
 
-class LibraryItem(ButtonBehavior, Card):
+class LibraryItem(FXButton, Card):
     item_id = StringProperty()
     title = StringProperty()
     subtitle = StringProperty()

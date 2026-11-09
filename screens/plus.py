@@ -10,7 +10,7 @@ from logic import billing
 Builder.load_string('''
 #:import W screens.widgets
 
-<PlanCard@ButtonBehavior+BoxLayout>:
+<PlanCard@ClickBox>:
     selected: False
     title: ""
     sub: ""

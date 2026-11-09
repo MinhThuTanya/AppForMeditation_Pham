@@ -3,6 +3,7 @@ from datetime import date, datetime
 
 from kivy.app import App
 from kivy.lang import Builder
+from kivy.animation import Animation
 from kivy.properties import DictProperty, NumericProperty, StringProperty
 from kivymd.uix.screen import MDScreen
 
@@ -13,32 +14,65 @@ from screens.widgets import long_date
 Builder.load_string('''
 #:import W screens.widgets
 
-<QuickAction@ButtonBehavior+BoxLayout>:
+# Кнопка-облачко в горошек (быстрые действия)
+<CloudAction@ClickBox>:
     icon: ""
     text: ""
     orientation: "vertical"
     size_hint_y: None
-    height: dp(74)
-    padding: 0, dp(8)
+    height: dp(92)
+    padding: 0, dp(14), 0, dp(18)
     canvas.before:
         Color:
-            rgba: W.WHITE
-        RoundedRectangle:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            source: "assets/images/buttons/cloud.png"
             pos: self.pos
             size: self.size
-            radius: [dp(20)]
     MDIcon:
         icon: root.icon
-        pos_hint: {"center_x": .5}
+        pos_hint: {"center_x": .55}
         theme_text_color: "Custom"
         text_color: W.BLUE2
     Label:
         text: root.text
-        font_name: W.SANS_MED
-        font_size: "11sp"
+        font_name: W.ROUND
+        font_size: "12sp"
         color: W.NAVY
         size_hint_y: None
-        height: dp(20)
+        height: dp(18)
+
+# Плитка с числом на фоне-картинке (овал со стрелками, каракули)
+<ArtTile@ClickBox>:
+    value: ""
+    caption: ""
+    bg_source: ""
+    orientation: "vertical"
+    padding: dp(18), dp(22), dp(18), dp(16)
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            source: self.bg_source
+            pos: self.pos
+            size: self.size
+    Label:
+        text: root.value
+        font_name: W.DISPLAY
+        font_size: "30sp"
+        color: W.BLUE2
+    Label:
+        text: root.caption
+        font_name: W.ROUND
+        font_size: "12sp"
+        color: W.NAVY
+        size_hint_y: None
+        height: dp(18)
+
+# Декоративная картинка (заменяется своими артами в assets/images/deco/)
+<Deco@Image>:
+    size_hint: None, None
+    fit_mode: "contain"
 
 <HomeScreen>:
     canvas.before:
@@ -47,19 +81,58 @@ Builder.load_string('''
         Rectangle:
             pos: 0, 0
             size: self.size
+    # плавающие пузыри и рыбка на фоне
+    Deco:
+        source: "assets/images/deco/bubble.png"
+        size: dp(46), dp(46)
+        pos: root.width - dp(70), root.height * 0.42 + root.bob
+        opacity: 0.8
+    Deco:
+        source: "assets/images/deco/bubble.png"
+        size: dp(26), dp(26)
+        pos: root.width - dp(40), root.height * 0.36 - root.bob * 0.6
+        opacity: 0.7
+    Deco:
+        source: "assets/images/deco/bubble.png"
+        size: dp(20), dp(20)
+        pos: dp(14), root.height * 0.30 + root.bob * 0.8
+        opacity: 0.7
     ScrollView:
         do_scroll_x: False
         BoxLayout:
             orientation: "vertical"
-            padding: dp(20), dp(24), dp(20), dp(20)
-            spacing: dp(14)
+            padding: dp(20), dp(22), dp(20), 0
+            spacing: dp(12)
             size_hint_y: None
             height: self.minimum_height
-            Body:
-                text: root.today_text
-                font_size: "13sp"
-            Title:
-                text: root.greeting
+            # --- приветствие с персонажем ---
+            RelativeLayout:
+                size_hint_y: None
+                height: dp(78)
+                Label:
+                    text: root.today_text
+                    font_name: W.ROUND
+                    font_size: "13sp"
+                    color: W.MUTED
+                    size_hint: None, None
+                    size: self.texture_size
+                    pos: 0, dp(56)
+                Label:
+                    text: root.greeting
+                    font_name: W.DISPLAY
+                    font_size: "30sp"
+                    color: W.BLUE2
+                    size_hint: None, None
+                    size: self.texture_size
+                    pos: 0, dp(6)
+                Deco:
+                    source: "assets/images/deco/face_spiky.png"
+                    size: dp(70), dp(70)
+                    pos: self.parent.width - dp(70), dp(4)
+                Deco:
+                    source: "assets/images/deco/arrow.png"
+                    size: dp(46), dp(34)
+                    pos: self.parent.width - dp(118), dp(40)
             # --- уровень стресса ---
             ClickBox:
                 orientation: "vertical"
@@ -86,6 +159,12 @@ Builder.load_string('''
                     Ellipse:
                         pos: self.right - dp(90), self.top - dp(80)
                         size: dp(130), dp(130)
+                    Color:
+                        rgba: 1, 1, 1, 0.55
+                    Rectangle:
+                        source: "assets/images/deco/swirl.png"
+                        pos: self.right - dp(150), self.y - dp(18)
+                        size: dp(120), dp(80)
                     StencilUnUse
                     RoundedRectangle:
                         pos: self.pos
@@ -94,16 +173,16 @@ Builder.load_string('''
                     StencilPop
                 Label:
                     text: app.t("stress_level", app.lang)
-                    font_name: W.SANS
+                    font_name: W.ROUND
                     font_size: "12sp"
-                    color: 1, 1, 1, 0.85
+                    color: 1, 1, 1, 0.9
                     text_size: self.size
                     halign: "left"
                     size_hint_y: None
                     height: dp(18)
                 Label:
                     text: root.stress_title
-                    font_name: W.SERIF
+                    font_name: W.DISPLAY
                     font_size: "24sp"
                     color: W.WHITE
                     text_size: self.size
@@ -111,9 +190,9 @@ Builder.load_string('''
                     valign: "middle"
                 Label:
                     text: root.stress_sub
-                    font_name: W.SANS
+                    font_name: W.ROUND
                     font_size: "12sp"
-                    color: 1, 1, 1, 0.85
+                    color: 1, 1, 1, 0.9
                     text_size: self.size
                     halign: "left"
                     size_hint_y: None
@@ -134,107 +213,113 @@ Builder.load_string('''
                             pos: self.x, self.y + dp(2)
                             size: self.width * root.stress_score / 10.0, dp(6)
                             radius: [dp(3)]
-            # --- рекомендация ---
-            ClickCard:
+            # --- рекомендация: рваная бумага на клетчатой ткани ---
+            ClickBox:
                 orientation: "horizontal"
-                spacing: dp(14)
+                size_hint_y: None
+                height: dp(112)
+                padding: dp(40), dp(36), dp(14), dp(22)
+                spacing: dp(12)
                 on_release: root.open_recommendation()
-                Widget:
-                    size_hint: None, None
-                    size: dp(56), dp(56)
+                canvas.before:
+                    Color:
+                        rgba: 1, 1, 1, 1
+                    Rectangle:
+                        source: "assets/images/buttons/paper.png"
+                        pos: self.pos
+                        size: self.size
+                Deco:
+                    source: "assets/images/deco/face_curly.png"
+                    size: dp(50), dp(50)
                     pos_hint: {"center_y": .5}
-                    canvas:
-                        Color:
-                            rgba: W.SKY
-                        RoundedRectangle:
-                            pos: self.pos
-                            size: self.size
-                            radius: [dp(16)]
-                    MDIcon:
-                        icon: "flower-tulip-outline"
-                        theme_text_color: "Custom"
-                        text_color: W.BLUE2
-                        center: self.parent.center
                 BoxLayout:
                     orientation: "vertical"
-                    size_hint_y: None
-                    height: self.minimum_height
-                    pos_hint: {"center_y": .5}
-                    Body:
+                    Label:
                         text: app.t("recommended_today", app.lang)
+                        font_name: W.ROUND
                         font_size: "11sp"
+                        color: W.MUTED
+                        text_size: self.size
+                        halign: "left"
+                        valign: "bottom"
                     Label:
                         text: root.rec_title
-                        font_name: W.SANS_BOLD
-                        font_size: "15sp"
+                        font_name: W.DISPLAY
+                        font_size: "17sp"
                         color: W.NAVY
-                        size_hint_y: None
-                        height: self.texture_size[1]
-                        text_size: self.width, None
-                    Body:
+                        text_size: self.size
+                        halign: "left"
+                        valign: "middle"
+                    Label:
                         text: root.rec_sub
-                        font_size: "12sp"
+                        font_name: W.ROUND
+                        font_size: "11sp"
+                        color: W.MUTED
+                        text_size: self.size
+                        halign: "left"
+                        valign: "top"
             # --- стрик и время ---
             BoxLayout:
                 size_hint_y: None
-                height: dp(84)
-                spacing: dp(12)
-                ClickCard:
-                    height: dp(84)
+                height: dp(112)
+                spacing: dp(8)
+                ArtTile:
+                    value: str(root.streak)
+                    caption: app.t("days_in_row", app.lang)
+                    bg_source: "assets/images/buttons/oval.png"
+                    padding: dp(18), dp(30), dp(18), dp(14)
                     on_release: app.go("stats")
-                    Label:
-                        text: str(root.streak)
-                        size_hint_y: None
-                        height: dp(34)
-                        font_name: W.SERIF
-                        font_size: "26sp"
-                        color: W.BLUE2
-                        text_size: self.size
-                        halign: "left"
-                    Body:
-                        text: app.t("days_in_row", app.lang)
-                        font_size: "12sp"
-                ClickCard:
-                    height: dp(84)
+                ArtTile:
+                    value: str(root.total)
+                    caption: app.t("minutes_total", app.lang)
+                    bg_source: "assets/images/buttons/scribble.png"
                     on_release: app.go("stats")
-                    Label:
-                        text: str(root.total)
-                        size_hint_y: None
-                        height: dp(34)
-                        font_name: W.SERIF
-                        font_size: "26sp"
-                        color: W.BLUE2
-                        text_size: self.size
-                        halign: "left"
-                    Body:
-                        text: app.t("minutes_total", app.lang)
-                        font_size: "12sp"
-            # --- быстрые действия ---
+            # --- быстрые действия: облачка ---
             GridLayout:
                 cols: 4
-                spacing: dp(10)
+                spacing: dp(6)
                 size_hint_y: None
-                height: dp(74)
-                QuickAction:
+                height: dp(92)
+                CloudAction:
                     icon: "emoticon-outline"
                     text: app.t("qa_mood", app.lang)
                     on_release: app.go("mood")
-                QuickAction:
+                CloudAction:
                     icon: "weather-night"
                     text: app.t("qa_sleep", app.lang)
                     on_release: app.go("dreams")
-                QuickAction:
+                CloudAction:
                     icon: "chart-bar"
                     text: app.t("qa_stats", app.lang)
                     on_release: app.go("stats")
-                QuickAction:
+                CloudAction:
                     icon: "cog-outline"
                     text: app.t("qa_settings", app.lang)
                     on_release: app.go("settings")
             Pill:
                 text: app.t("sos_button", app.lang).upper()
+                font_name: W.ROUND
+                font_size: "15sp"
                 bg: W.SOS
                 on_release: app.tab("sos")
+            # --- нижний декор: рыбки и облака-волны ---
+            RelativeLayout:
+                size_hint_y: None
+                height: dp(120)
+                Image:
+                    source: "assets/images/deco/clouds.png"
+                    fit_mode: "fill"
+                    size_hint: None, None
+                    size: self.parent.width + dp(40), dp(90)
+                    pos: -dp(20), 0
+                Deco:
+                    source: "assets/images/deco/fish.png"
+                    size: dp(70), dp(36)
+                    pos: root.fish_x, dp(70)
+                Deco:
+                    source: "assets/images/deco/face_sleepy.png"
+                    size: dp(48), dp(48)
+                    pos: self.parent.width - dp(56), dp(66)
 ''')
 
 # Рекомендация по уровню стресса (персонализированный подбор, задача 2 ТЗ)
@@ -254,9 +339,22 @@ class HomeScreen(MDScreen):
     rec_title = StringProperty("")
     rec_sub = StringProperty("")
 
+    bob = NumericProperty(0)        # покачивание пузырей
+    fish_x = NumericProperty(-80)   # рыбка плывёт по волнам
+
     def __init__(self, **kw):
         super().__init__(**kw)
         App.get_running_app().bind(lang=lambda *a: self.refresh())
+        bob = Animation(bob=14, duration=2.2, t="in_out_sine") + Animation(bob=0, duration=2.2, t="in_out_sine")
+        bob.repeat = True
+        bob.start(self)
+        self._swim()
+
+    def _swim(self, *_):
+        self.fish_x = -80
+        anim = Animation(fish_x=self.width + 20, duration=14, t="linear")
+        anim.bind(on_complete=self._swim)
+        anim.start(self)
 
     def on_pre_enter(self, *_):
         self.refresh()

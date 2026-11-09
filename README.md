@@ -18,6 +18,20 @@
 | `tools/` | Скрипты: генерация спрайтов аватара и иконки, сборка языковых файлов |
 | `buildozer.spec` | Настройки сборки APK |
 
+## Свои рисунки вместо временных
+
+Декор, фоны кнопок и смайлики пока временные — их рисует скрипт `tools/make_deco.py`.
+Чтобы поставить свои арты, положите PNG с прозрачным фоном **под теми же именами** — код менять не нужно:
+
+| Папка | Файлы |
+|---|---|
+| `assets/images/deco/` | `face_spiky.png`, `face_curly.png`, `face_glasses.png`, `face_sleepy.png` (персонажи), `bubble.png`, `ripple.png` (эффект нажатия), `clouds.png`, `fish.png`, `swirl.png`, `arrow.png` |
+| `assets/images/buttons/` | `oval.png`, `scribble.png`, `cloud.png`, `paper.png` — фоны кнопок главного экрана |
+| `assets/images/moods/` | `joy.png`, `calm.png`, `tired.png`, `anxious.png`, `sad.png` — смайлики в календаре |
+| `assets/images/avatar/` | `calm.png`, `glowing.png`, `sad.png`, `anxious.png`, `tired.png` — Аватар |
+
+Шрифты главного экрана: Rubik Black (заголовки) и Nunito ExtraBold (подписи), лицензия SIL OFL.
+
 ## Запуск на компьютере (PyCharm)
 
 1. Откройте папку проекта в PyCharm: **File → Open → App for meditation**.

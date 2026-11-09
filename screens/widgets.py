@@ -26,7 +26,7 @@ MOODS = ["радость", "спокойствие", "усталость", "тр
 MOOD_KEYS = {"радость": "mood_joy", "спокойствие": "mood_calm",
              "усталость": "mood_tired", "тревога": "mood_anxious",
              "грусть": "mood_sad"}
-MOOD_COLORS = {"радость": hx("#F2D06B"), "спокойствие": hx("#7FA6F0"),
+MOOD_COLORS = {"радость": hx("#6EC878"), "спокойствие": hx("#7FA6F0"),
                "усталость": hx("#B9A7E8"), "тревога": hx("#E8706A"),
                "грусть": hx("#9DB0CF")}
 
@@ -34,6 +34,16 @@ SERIF = "assets/fonts/AkiiSerif-Bold.ttf"
 SANS = "assets/fonts/Inter-Regular.otf"
 SANS_MED = "assets/fonts/Inter-Medium.otf"
 SANS_BOLD = "assets/fonts/Inter-Bold.otf"
+DISPLAY = "assets/fonts/Rubik-Black.ttf"      # «пузырчатый» шрифт заголовков главного экрана
+ROUND = "assets/fonts/Nunito-ExtraBold.ttf"   # округлый шрифт подписей кнопок
+
+# Смайлики настроений для календаря (assets/images/moods/<ключ>.png)
+MOOD_ICONS = {"радость": "joy", "спокойствие": "calm", "усталость": "tired",
+              "тревога": "anxious", "грусть": "sad"}
+
+
+def mood_icon(mood):
+    return f"assets/images/moods/{MOOD_ICONS.get(mood, 'calm')}.png"
 
 
 class Title(Label):
@@ -49,7 +59,72 @@ class Card(BoxLayout):
     radius = NumericProperty(24)
 
 
-class Pill(ButtonBehavior, Label):
+class FXButton(ButtonBehavior):
+    """Кнопка с эффектами: при нажатии слегка увеличивается,
+    при отпускании от неё расходятся круги на воде и пузырьки."""
+    fx_scale = NumericProperty(1.0)
+    fx_bubbles = BooleanProperty(True)
+
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        from kivy.clock import Clock
+        Clock.schedule_once(self._fx_setup, 0)
+
+    def _fx_setup(self, *_):
+        from kivy.graphics import PopMatrix, PushMatrix, Scale
+        self._fx = Scale(1, 1, 1, origin=self.center)
+        self.canvas.before.insert(0, PushMatrix())
+        self.canvas.before.insert(1, self._fx)
+        self.canvas.after.add(PopMatrix())
+        self.bind(center=lambda w, c: setattr(self._fx, "origin", c),
+                  fx_scale=self._fx_apply)
+
+    def _fx_apply(self, *_):
+        if hasattr(self, "_fx"):
+            self._fx.x = self._fx.y = self.fx_scale
+
+    def on_press(self):
+        from kivy.animation import Animation
+        Animation.cancel_all(self, "fx_scale")
+        Animation(fx_scale=1.07, duration=0.1, t="out_quad").start(self)
+
+    def on_release(self):
+        from kivy.animation import Animation
+        Animation.cancel_all(self, "fx_scale")
+        Animation(fx_scale=1.0, duration=0.35, t="out_back").start(self)
+        if self.fx_bubbles:
+            splash(*self.to_window(*self.center))
+
+
+def splash(x, y):
+    """Круги на воде и пузырьки в точке (x, y) окна."""
+    import random
+    from kivy.animation import Animation
+    from kivy.core.window import Window
+    from kivy.metrics import dp
+    from kivy.uix.image import Image
+
+    def run(img, anim):
+        Window.add_widget(img)
+        anim.bind(on_complete=lambda *a: Window.remove_widget(img))
+        anim.start(img)
+
+    r0 = dp(30)
+    ring = Image(source="assets/images/deco/ripple.png", size_hint=(None, None),
+                 size=(r0, r0), center=(x, y), opacity=0.9, fit_mode="contain")
+    big = dp(170)
+    run(ring, Animation(size=(big, big), center=(x, y), opacity=0, duration=0.7, t="out_cubic"))
+    for _ in range(6):
+        s = dp(random.uniform(10, 24))
+        b = Image(source="assets/images/deco/bubble.png", size_hint=(None, None), size=(s, s),
+                  center=(x + dp(random.uniform(-30, 30)), y + dp(random.uniform(-8, 8))),
+                  opacity=0.95, fit_mode="contain")
+        tx = b.x + dp(random.uniform(-40, 40))
+        ty = b.y + dp(random.uniform(60, 130))
+        run(b, Animation(x=tx, y=ty, opacity=0, duration=random.uniform(0.8, 1.3), t="out_sine"))
+
+
+class Pill(FXButton, Label):
     """Кнопка-«таблетка» как в макете."""
     bg = ColorProperty(BLUE2)
     fg = ColorProperty(WHITE)
@@ -78,6 +153,14 @@ from kivy.uix.textinput import TextInput  # noqa: E402
 
 class Field(TextInput):
     """Поле ввода в стиле приложения (белое, со скруглёнными углами)."""
+    pass
+
+
+class ClickBox(FXButton, BoxLayout):
+    pass
+
+
+class ClickCard(FXButton, Card):
     pass
 
 
@@ -198,9 +281,6 @@ Builder.load_string('''
         Color:
             rgba: self.hint_text_color if not self.text else self.foreground_color
 
-<ClickBox@ButtonBehavior+BoxLayout>:
-
-<ClickCard@ButtonBehavior+Card>:
 
 <Bars>:
     canvas:
