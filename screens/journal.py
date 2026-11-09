@@ -260,8 +260,10 @@ class JournalScreen(MDScreen):
         for m in MOODS:
             item = BoxLayout(spacing=dp(3))
             item.add_widget(Image(source=mood_icon(m), size_hint_x=None, width=dp(16), fit_mode="contain"))
-            item.add_widget(Label(text=app.t(MOOD_KEYS[m]), font_size="10sp", color=(0.42, 0.45, 0.58, 1),
-                                  font_name=ROUND, halign="left", text_size=(None, None)))
+            lbl = Label(text=app.t(MOOD_KEYS[m]), font_size="11sp", color=(0.42, 0.45, 0.58, 1),
+                        font_name=ROUND, halign="left", valign="middle")
+            lbl.bind(size=lambda w, v: setattr(w, "text_size", v))
+            item.add_widget(lbl)
             leg.add_widget(item)
         # последние записи
         box = self.ids.entries
